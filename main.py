@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+import subprocess  # ضفنا هذه المكتبة حتى نكدر نسحب التحديثات من GitHub
 from . import models, database, whatsapp_utils
 
 models.Base.metadata.create_all(bind=database.engine)
@@ -19,6 +20,15 @@ async def admin_dashboard(request: Request, db: Session = Depends(database.get_d
     departments = db.query(models.Department).all()
     products = db.query(models.Product).all()
     return templates.TemplateResponse("index.html", {"request": request, "departments": departments, "products": products})
+
+# إضافة مسار التقارير الجديد اللي ضفنا الزر مالته
+@app.get("/admin/reports", response_class=HTMLResponse)
+async def admin_reports(request: Request, db: Session = Depends(database.get_db)):
+    # حساب عدد الزبائن والمنتجات لعرضها بالتقارير
+    customer_count = db.query(models.Customer).count()
+    product_count = db.query(models.Product).count()
+    # راح نحتاج ملف reports.html بعدين
+    return templates.TemplateResponse("reports.html", {"request": request, "customer_count": customer_count, "product_count": product_count})
 
 @app.post("/admin/add-department")
 async def add_department(name: str = Form(...), description: str = Form(""), db: Session = Depends(database.get_db)):
@@ -48,6 +58,15 @@ async def delete_product(product_id: int, db: Session = Depends(database.get_db)
         db.commit()
     return RedirectResponse(url="/admin", status_code=303)
 
+# مسار تحديث السيرفر من GitHub (زر المزامنة)
+@app.post("/admin/pull-update")
+async def pull_update():
+    try:
+        result = subprocess.run(["git", "pull"], capture_output=True, text=True)
+        return {"status": "success", "output": result.stdout}
+    except Exception as e:
+        return {"status": "error", "message": str(e)}
+
 # ==========================================
 # استقبال رسائل الواتساب (البوت)
 # ==========================================
@@ -71,12 +90,10 @@ async def receive_message(request: Request, db: Session = Depends(database.get_d
                 dept_id = int(text)
                 products = db.query(models.Product).filter(models.Product.department_id == dept_id).all()
                 if products:
-                    msg = "🛒 المنتجات المتاحة:
-
-"
+                    # تم إصلاح طريقة كتابة النصوص متعددة الأسطر باستخدام \n
+                    msg = "🛒 المنتجات المتاحة:\n\n"
                     for p in products:
-                        msg += f"🔹 {p.name} - السعر: {p.price} دينار
-"
+                        msg += f"🔹 {p.name} - السعر: {p.price} دينار\n"
                     whatsapp_utils.send_whatsapp_text(phone_number, msg)
                 else:
                     whatsapp_utils.send_whatsapp_text(phone_number, "عذراً، القسم فارغ أو الرقم غير صحيح.")
@@ -85,14 +102,11 @@ async def receive_message(request: Request, db: Session = Depends(database.get_d
                 if not departments:
                     whatsapp_utils.send_whatsapp_text(phone_number, "أهلاً بك! السوبر ماركت قيد التجهيز.")
                 else:
-                    msg = "أهلاً بك في السوبر ماركت 🛒
-يرجى الرد برقم القسم لعرض المنتجات:
-
-"
+                    msg = "أهلاً بك في السوبر ماركت 🛒\nيرجى الرد برقم القسم لعرض المنتجات:\n\n"
                     for dept in departments:
-                        msg += f"{dept.id}. {dept.name}
-"
+                        msg += f"{dept.id}. {dept.name}\n"
                     whatsapp_utils.send_whatsapp_text(phone_number, msg)
     except Exception as e:
-        pass
+        # طباعة الخطأ بدل تجاهله حتى نعرف الخلل إذا صار
+        print(f"Error processing webhook: {e}") 
     return {"status": "ok"}
