@@ -1,0 +1,95 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <!-- نموذج إضافة قسم -->
+    <div class="col-md-4 mb-4">
+        <div class="card p-3">
+            <h4 class="mb-3">➕ إضافة قسم جديد</h4>
+            <form action="/admin/add-department" method="post">
+                <div class="mb-3">
+                    <label class="form-label">اسم القسم</label>
+                    <input type="text" name="name" class="form-control" required placeholder="مثال: المواد الغذائية">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">الوصف (اختياري)</label>
+                    <input type="text" name="description" class="form-control">
+                </div>
+                <button type="submit" class="btn btn-success w-100">إضافة القسم</button>
+            </form>
+        </div>
+        
+        <!-- نموذج إضافة منتج -->
+        <div class="card p-3 mt-4">
+            <h4 class="mb-3">📦 إضافة منتج جديد</h4>
+            <form action="/admin/add-product" method="post">
+                <div class="mb-3">
+                    <label class="form-label">اختر القسم</label>
+                    <select name="department_id" class="form-select" required>
+                        <option value="">-- اختر قسم --</option>
+                        {% for dept in departments %}
+                        <option value="{{ dept.id }}">{{ dept.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">اسم المنتج</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">السعر (دينار)</label>
+                    <input type="number" name="price" class="form-control" required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100">إضافة المنتج</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- عرض البيانات -->
+    <div class="col-md-8">
+        <div class="card p-3 mb-4">
+            <h4>📁 الأقسام الحالية</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr><th>رقم القسم للواتساب</th><th>اسم القسم</th></tr>
+                </thead>
+                <tbody>
+                    {% for dept in departments %}
+                    <tr>
+                        <td><strong>{{ dept.id }}</strong></td>
+                        <td>{{ dept.name }}</td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="2" class="text-center">لا توجد أقسام بعد</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card p-3">
+            <h4>🛍️ المنتجات الحالية</h4>
+            <table class="table table-striped">
+                <thead>
+                    <tr><th>المنتج</th><th>السعر</th><th>القسم</th><th>حذف</th></tr>
+                </thead>
+                <tbody>
+                    {% for product in products %}
+                    <tr>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.price }} د.ع</td>
+                        <td>{{ product.department.name }}</td>
+                        <td>
+                            <form action="/admin/delete-product/{{ product.id }}" method="post" style="display:inline;">
+                                <button type="submit" class="btn btn-sm btn-danger">حذف</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr><td colspan="4" class="text-center">لا توجد منتجات بعد</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
