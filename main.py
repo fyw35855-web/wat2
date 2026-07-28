@@ -2,9 +2,14 @@ from fastapi import FastAPI, Request, Depends, Form
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
-import subprocess  # ضفنا هذه المكتبة حتى نكدر نسحب التحديثات من GitHub
-from . import models, database, whatsapp_utils
+import subprocess
 
+# استدعاء الملفات الخاصة بالمشروع (بدون نقطة لتجنب مشاكل uvicorn)
+import models
+import database
+import whatsapp_utils
+
+# إنشاء الجداول في قاعدة البيانات إذا لم تكن موجودة
 models.Base.metadata.create_all(bind=database.engine)
 app = FastAPI(title="نظام السوبر ماركت")
 
@@ -21,14 +26,22 @@ async def admin_dashboard(request: Request, db: Session = Depends(database.get_d
     products = db.query(models.Product).all()
     return templates.TemplateResponse("index.html", {"request": request, "departments": departments, "products": products})
 
-# إضافة مسار التقارير الجديد اللي ضفنا الزر مالته
+# مسار التقارير (محدث ليتطابق مع واجهة reports.html)
 @app.get("/admin/reports", response_class=HTMLResponse)
 async def admin_reports(request: Request, db: Session = Depends(database.get_db)):
-    # حساب عدد الزبائن والمنتجات لعرضها بالتقارير
+    dept_count = db.query(models.Department).count()
+    prod_count = db.query(models.Product).count()
     customer_count = db.query(models.Customer).count()
-    product_count = db.query(models.Product).count()
-    # راح نحتاج ملف reports.html بعدين
-    return templates.TemplateResponse("reports.html", {"request": request, "customer_count": customer_count, "product_count": product_count})
+    
+    return templates.TemplateResponse(
+        "reports.html", 
+        {
+            "request": request, 
+            "dept_count": dept_count, 
+            "prod_count": prod_count,
+            "customer_count": customer_count
+        }
+    )
 
 @app.post("/admin/add-department")
 async def add_department(name: str = Form(...), description: str = Form(""), db: Session = Depends(database.get_db)):
@@ -80,17 +93,18 @@ async def receive_message(request: Request, db: Session = Depends(database.get_d
             phone_number = payload['from'].split('@')[0]
             text = payload['body']
             
+            # التحقق من الزبون وتسجيله إذا كان جديداً
             customer = db.query(models.Customer).filter(models.Customer.phone == phone_number).first()
             if not customer:
                 new_customer = models.Customer(phone=phone_number, name="زبون جديد")
                 db.add(new_customer)
                 db.commit()
             
+            # معالجة رد الزبون
             if text.isdigit():
                 dept_id = int(text)
                 products = db.query(models.Product).filter(models.Product.department_id == dept_id).all()
                 if products:
-                    # تم إصلاح طريقة كتابة النصوص متعددة الأسطر باستخدام \n
                     msg = "🛒 المنتجات المتاحة:\n\n"
                     for p in products:
                         msg += f"🔹 {p.name} - السعر: {p.price} دينار\n"
@@ -107,6 +121,5 @@ async def receive_message(request: Request, db: Session = Depends(database.get_d
                         msg += f"{dept.id}. {dept.name}\n"
                     whatsapp_utils.send_whatsapp_text(phone_number, msg)
     except Exception as e:
-        # طباعة الخطأ بدل تجاهله حتى نعرف الخلل إذا صار
         print(f"Error processing webhook: {e}") 
     return {"status": "ok"}
