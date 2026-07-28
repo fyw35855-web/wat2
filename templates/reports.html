@@ -1,0 +1,30 @@
+{% extends "layout.html" %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <h2>📊 تقارير وإحصائيات السوبر ماركت</h2>
+        <hr>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card p-4 bg-primary text-white text-center">
+            <h3>عدد الأقسام الحالية</h3>
+            <h1 class="display-4 fw-bold">{{ dept_count }}</h1>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card p-4 bg-success text-white text-center">
+            <h3>عدد المنتجات الحالية</h3>
+            <h1 class="display-4 fw-bold">{{ prod_count }}</h1>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <a href="/admin" class="btn btn-secondary">⬅️ العودة للوحة التحكم الرئيسية</a>
+    </div>
+</div>
+{% endblock %}
