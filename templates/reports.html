@@ -1,30 +1,61 @@
 {% extends "layout.html" %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12 mb-4">
-        <h2>📊 تقارير وإحصائيات السوبر ماركت</h2>
-        <hr>
-    </div>
-    
-    <div class="col-md-6">
-        <div class="card p-4 bg-primary text-white text-center">
-            <h3>عدد الأقسام الحالية</h3>
-            <h1 class="display-4 fw-bold">{{ dept_count }}</h1>
+<div class="container-fluid py-3">
+    <!-- عنوان الصفحة -->
+    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-3">
+        <div>
+            <h2 class="fw-bold text-dark m-0">📊 تقارير وإحصائيات السوبر ماركت</h2>
+            <p class="text-muted small m-0 mt-1">نظرة عامة على أداء الأقسام، المنتجات، والتفاعل عبر الواتساب</p>
         </div>
+        <a href="/admin" class="btn btn-outline-secondary">
+            ⬅️ العودة للوحة التحكم
+        </a>
     </div>
-    
-    <div class="col-md-6">
-        <div class="card p-4 bg-success text-white text-center">
-            <h3>عدد المنتجات الحالية</h3>
-            <h1 class="display-4 fw-bold">{{ prod_count }}</h1>
-        </div>
-    </div>
-</div>
 
-<div class="row mt-4">
-    <div class="col-12">
-        <a href="/admin" class="btn btn-secondary">⬅️ العودة للوحة التحكم الرئيسية</a>
+    <!-- كروت الإحصائيات -->
+    <div class="row g-4">
+        <!-- عدد الأقسام -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-primary text-white h-100">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="fs-1 mb-2">📁</div>
+                        <h5 class="card-title text-white-50">إجمالي الأقسام</h5>
+                    </div>
+                    <h1 class="display-3 fw-bold my-2">{{ dept_count }}</h1>
+                    <span class="badge bg-light text-primary w-50 mx-auto rounded-pill">قسم متاح</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- عدد المنتجات -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-success text-white h-100">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="fs-1 mb-2">🏷️</div>
+                        <h5 class="card-title text-white-50">إجمالي المنتجات</h5>
+                    </div>
+                    <h1 class="display-3 fw-bold my-2">{{ prod_count }}</h1>
+                    <span class="badge bg-light text-success w-50 mx-auto rounded-pill">منتج مسجل</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- عدد الزبائن -->
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm rounded-3 bg-dark text-white h-100">
+                <div class="card-body p-4 text-center d-flex flex-column justify-content-between">
+                    <div>
+                        <div class="fs-1 mb-2">👥</div>
+                        <h5 class="card-title text-white-50">الزبائن المتفاعلين</h5>
+                    </div>
+                    <h1 class="display-3 fw-bold my-2">{{ customer_count }}</h1>
+                    <span class="badge bg-secondary w-50 mx-auto rounded-pill">مستخدم للواتساب</span>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
